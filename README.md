@@ -18,7 +18,7 @@ Essentially this just scrapes the bt4u.org service. This is a nice script to thr
 
 Usage:
 
-````ruby blackburg-transit.rb home
+```ruby blackburg-transit.rb home
 
 Stops used can be changed by editing the script directly by modifying the **stops** variable. For my own personal use I've specified the stops I've listed under campus to be used when VT_WLAN or VT_Wireless is present otherwise the home stops are used.
     
