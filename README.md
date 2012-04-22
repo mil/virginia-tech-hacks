@@ -2,9 +2,9 @@ Virginia Tech Hacks
 ===================
 This is a collection of small scripts I've made while at Virginia Tech. Enjoy these scripts and feel free to modify them and redistribute.
 
-Request Stalk (request-stalk.pl)
+Course Add (course-add.rb)
 --------------------------------
-A script which stalks the Virginia Tech classes time table and when a class becomes available it automatically registers you for that class. Use at your own discretion.
+A script which stalks the Virginia Tech classes time table and when a class becomes available it automatically registers you for that class. Can be used to check multiple crns at once. Use at your own discretion.
 
 Scholar Grades (scholar-grades.rb)
 ----------------------------------
