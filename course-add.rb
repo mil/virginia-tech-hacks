@@ -143,7 +143,7 @@ def courseAdd(courses, cookies)
 
 		puts "Checking Availaibility of CRNs\n".color(:yellow)
 
-		courses.each do |c|
+		courses.each_with_index do |c, i|
 
 			puts "#{c[:crn]} - #{c[:title]}".color(:blue) 
 			course = getCourse(c[:crn], cookies)	
@@ -155,6 +155,8 @@ def courseAdd(courses, cookies)
 
 				if (registerCrn(c[:crn],cookies)) then
 					puts "CRN #{c[:crn]} Registration Sucessfull"
+					courses.slice!(i)
+
 				else
 					puts "Couldn't Register"
 				end
