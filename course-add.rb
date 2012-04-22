@@ -7,6 +7,10 @@ require 'highline/import'
 #Start of the Semester
 $term = '09'
 $year = '2012'
+$agent = Mechanize.new
+$agent.redirect_ok = true 
+$agent.user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.11 Safari/535.19"
+$agent.verify_mode = OpenSSL::SSL::VERIFY_NONE
 
 #Uber simway to colorize outputin
 class String
@@ -25,18 +29,12 @@ class String
 	end
 end
 
-#Creating Mechanize
-@agent = Mechanize.new
-@agent.redirect_ok = true 
-@agent.user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.11 Safari/535.19"
-@agent.verify_mode = OpenSSL::SSL::VERIFY_NONE
-
 
 #Logins, Gets the Courses, Returns Courses Obj with Name/URL/Tools for each
 def login(username, password)
 
 	#Login to the system!
-	page = @agent.get("https://auth.vt.edu/login?service=https://webapps.banner.vt.edu/banner-cas-prod/authorized/banner/SelfService")
+	page = $agent.get("https://auth.vt.edu/login?service=https://webapps.banner.vt.edu/banner-cas-prod/authorized/banner/SelfService")
 	login = page.forms.first
 	login.set_fields({
 		:username => username, 
@@ -45,30 +43,13 @@ def login(username, password)
 	if (login.submit().body.match(/Invalid username or password/)) then
 		return false
 	else 
-		return unloadCookies
+		return true 
 	end
 end
 
-def loadCookies(cookieJar)
-	@agent.cookie_jar.load_cookiestxt(cookieJar)
-end
-
-
-def unloadCookies
-	#Store the Coories 
-	cookieJar = StringIO.new
-	@agent.cookie_jar.dump_cookiestxt(cookieJar)
-	@agent.cookie_jar.clear!
-
-	return cookieJar.string
-end
-
-
-def getCourse(crn, cookies)
-	loadCookies(cookies)
-		
+def getCourse(crn)	
 	courseDetails = Nokogiri::HTML(
-		@agent.get(
+		$agent.get(
 			"https://banweb.banner.vt.edu/ssb/prod/HZSKVTSC.P_ProcComments?CRN=#{crn}&TERM=#{$term}&YEAR=#{$year}"
 		).body
 	)
@@ -111,15 +92,12 @@ def getCourse(crn, cookies)
 	return course
 end
 
-def registerCrn(crn, cookies)
-	loadCookies(cookies)
-
-
-	@agent.get("https://banweb.banner.vt.edu/ssb/prod/twbkwbis.P_GenMenu?name=bmenu.P_MainMnu")
+def registerCrn(crn)
+	$agent.get("https://banweb.banner.vt.edu/ssb/prod/twbkwbis.P_GenMenu?name=bmenu.P_MainMnu")
 	registrationPage = "https://banweb.banner.vt.edu/ssb/prod/hzskstat.P_DispRegStatPage"
-	reg = @agent.get(registrationPage)	
+	reg = $agent.get(registrationPage)	
 
-	dropAdd = reg.link_with(:href => "/ssb/prod/bwskfreg.P_AddDropCrse?term_in=201209").click
+	dropAdd = reg.link_with(:href => "/ssb/prod/bwskfreg.P_AddDropCrse?term_in=#{year}#{term}").click
 	crnEntry = dropAdd.form_with(:action => '/ssb/prod/bwckcoms.P_Regs')
 	crnEntry.fields_with(:id => 'crn_id1').first.value = crn
 	crnEntry['CRN_IN'] = crn
@@ -132,12 +110,8 @@ def registerCrn(crn, cookies)
 	end
 end
 
-def unRegisterCrn(crn, cookies)
-
-end
-
 #Main loop
-def courseAdd(courses, cookies)
+def courseAdd(courses)
 	
 	loop do
 		system("clear")
@@ -147,14 +121,12 @@ def courseAdd(courses, cookies)
 		courses.each_with_index do |c, i|
 
 			puts "#{c[:crn]} - #{c[:title]}".color(:blue) 
-			course = getCourse(c[:crn], cookies)	
+			course = getCourse(c[:crn])	
 			puts "Availaibility: #{course[:seats]} / #{course[:capacity]}".color(:red)
 
 			if (course[:seats] =~ /Full/) then
 			else 
-				unloadCookies
-
-				if (registerCrn(c[:crn],cookies)) then
+				if (registerCrn(c[:crn])) then
 					puts "CRN #{c[:crn]} Registration Sucessfull"
 					courses.slice!(i)
 
@@ -179,10 +151,8 @@ def main
 	username = ask("PID ".color(:green) + ":: ") { |q| q.echo = true }
 	password = ask("Password ".color(:green) + ":: " ) { |q| q.echo = "*" }
 
-	cookies = login(username, password)
-
 	system("clear")
-	if cookies then
+	if login(username, password) then
 		puts "Login Successful\n--------------\n".color(:yellow)
 	else
 		puts "Invalid PID/Password"
@@ -213,7 +183,7 @@ def main
 		if (input =~ /^\d{5}$/) then
 			
 
-			c = getCourse(input.to_s, cookies)
+			c = getCourse(input.to_s)
 
 
 			print "\n"
@@ -230,7 +200,7 @@ def main
 			end
 
 		elsif (input == "start") then
-			courseAdd(crns,cookies)
+			courseAdd(crns)
 		else 
 			puts "Invalid CRN, This is a 5 Digit Course Request Number"
 			
