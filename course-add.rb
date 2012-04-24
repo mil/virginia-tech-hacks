@@ -95,7 +95,7 @@ def registerCrn(crn)
 	#Follow Path
 	$agent.get("https://banweb.banner.vt.edu/ssb/prod/twbkwbis.P_GenMenu?name=bmenu.P_MainMnu")
 	reg = $agent.get("https://banweb.banner.vt.edu/ssb/prod/hzskstat.P_DispRegStatPage")
-	dropAdd = reg.link_with(:href => "/ssb/prod/bwskfreg.P_AddDropCrse?term_in=#{year}#{term}").click
+	dropAdd = reg.link_with(:href => "/ssb/prod/bwskfreg.P_AddDropCrse?term_in=#{$year}#{$term}").click
 
 	#Fill in CRN Box and Submit
 	crnEntry = dropAdd.form_with(:action => '/ssb/prod/bwckcoms.P_Regs')
