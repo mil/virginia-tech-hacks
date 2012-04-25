@@ -1,4 +1,5 @@
 #!/usr/bin/ruby
+require 'rubygems'
 require 'mechanize'
 require 'nokogiri'
 

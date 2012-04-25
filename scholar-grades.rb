@@ -1,9 +1,11 @@
 #!/usr/bin/ruby
+require 'rubygems'
 require 'mechanize'
 require 'nokogiri'
 require 'json'
-require 'stringio'
 require 'highline/import'
+require 'stringio'
+
 
 #Create the agent
 @agent = Mechanize.new

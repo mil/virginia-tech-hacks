@@ -1,12 +1,14 @@
 #!/usr/bin/ruby
+require 'rubygems'
 require 'mechanize'
 require 'nokogiri'
-require 'stringio'
 require 'highline/import'
+require 'stringio'
 
 #Change based on Semester
 $term = '09'
 $year = '2012'
+$frequency = 4  #Number of Seconds between check requests
 
 $agent = Mechanize.new
 $agent.redirect_ok = true 
@@ -49,9 +51,13 @@ end
 
 #Gets Course Information
 def getCourse(crn)	
-	courseDetails = Nokogiri::HTML( $agent.get(
-		"https://banweb.banner.vt.edu/ssb/prod/HZSKVTSC.P_ProcComments?CRN=#{crn}&TERM=#{$term}&YEAR=#{$year}"
-	).body)
+	begin
+		courseDetails = Nokogiri::HTML( $agent.get(
+			"https://banweb.banner.vt.edu/ssb/prod/HZSKVTSC.P_ProcComments?CRN=#{crn}&TERM=#{$term}&YEAR=#{$year}"
+		).body)
+	rescue
+		return false #Failed to get course
+	end
 
 	#Flatten table to make it easier to work with
 	course = {}
@@ -112,16 +118,28 @@ end
 
 #Main loop that checks the availaibility of each courses and fires to registerCrn on availaibility
 def checkCourses(courses)
-	
+
+	requestCount = 0
+	startTime = Time.new
 	loop do
 		system("clear")
 
-		puts "Checking Availaibility of CRNs\n".color(:yellow)
+		requestCount += 1
+		nowTime = Time.new
+
+		puts "Checking Availaibility of CRNs".color(:yellow)
+		puts "--------------------------------\n"
+		puts "Started:\t#{startTime.asctime}".color(:magenta)
+		puts "Now:    \t#{nowTime.asctime}".color(:cyan)
+		puts "Request:\t#{requestCount} (Once every #{$frequency} seconds)".color(:green)
+		puts "--------------------------------\n\n"
 
 		courses.each_with_index do |c, i|
 
 			puts "#{c[:crn]} - #{c[:title]}".color(:blue) 
 			course = getCourse(c[:crn])	
+			next unless course #If throws error
+
 			puts "Availaibility: #{course[:seats]} / #{course[:capacity]}".color(:red)
 
 			if (course[:seats] =~ /Full/) then
@@ -139,7 +157,7 @@ def checkCourses(courses)
 			print "\n"
 		end
 
-		sleep 4
+		sleep $frequency
 	end
 end
 
