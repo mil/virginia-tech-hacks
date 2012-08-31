@@ -33,7 +33,7 @@ def getNextTime(route, stop)
 		page = page.forms.first.submit(page.forms.first.buttons[0])
 
 		#Return Next Bus
-		return Nokogiri::HTML(page.body).css('ul li')[1].text().delete(' ').split("\/").last[4..-1]
+		return Nokogiri::HTML(page.body).css('ul li')[1].text().split("\/").last[18..-1]
 
 	rescue Exception => e
 		return false
