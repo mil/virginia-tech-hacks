@@ -21,6 +21,7 @@ def getNextTime(route, stop)
     page.forms.first.set_fields({ "routeListBox" => route })
     page = page.forms.first.submit(page.forms.first.buttons[0])
 
+    #Send Stop Id
     selectValue = nil
     page.forms.first.field_with(:id => "stopListBox").options.each do |f|
       if (f.value.match(/#{stop}/)) then
@@ -28,11 +29,10 @@ def getNextTime(route, stop)
         break
       end
     end
-
     page.forms.first.set_fields({ "stopListBox" => selectValue })
     page = page.forms.first.submit(page.forms.first.buttons[0])
 
-    #Return Next Bus
+    #Parse and Return Next Bus
     return Nokogiri::HTML(page.body).css('ul li')[1].text().split("\/").last[18..-1]
 
   rescue Exception => e
