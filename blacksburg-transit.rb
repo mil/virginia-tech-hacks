@@ -1,4 +1,4 @@
-#!/usr/bin/ruby
+#!/usr/bin/env ruby
 require 'rubygems'
 require 'mechanize'
 require 'nokogiri'
@@ -21,8 +21,15 @@ def getNextTime(route, stop)
 		page.forms.first.set_fields({ "routeListBox" => route })
 		page = page.forms.first.submit(page.forms.first.buttons[0])
 
-		#Send Stop
-		page.forms.first.set_fields({ "stopListBox" => stop })
+    selectValue = nil
+    page.forms.first.field_with(:id => "stopListBox").options.each do |f|
+      if (f.value.match(/#{stop}/)) then
+        selectValue = f.value
+        break
+      end
+    end
+
+		page.forms.first.set_fields({ "stopListBox" => selectValue })
 		page = page.forms.first.submit(page.forms.first.buttons[0])
 
 		#Return Next Bus
