@@ -10,6 +10,14 @@ stops = {
 }
 location = ARGV[0] || ((%x[sudo iwlist scan 2>&1].match(/(VT_WLAN|VT-Wireless)/)) ? "campus" : "home")
 
+def startMatch(input, list)
+  list.each do |item|
+    if item.match(/^#{input}/) then
+      return item
+    end
+  end
+end
+
 #Get next stop time for given route and stop
 def getNextTime(route, stop)
   agent = Mechanize.new
@@ -17,23 +25,25 @@ def getNextTime(route, stop)
 
   begin
     #Send Route
-    page = agent.get("http://www.bt4u.org")
-    page.forms.first.set_fields({ "routeListBox" => route })
+    page = agent.get("http://www.bt4u.org/Mobile.aspx")
+
+    routeName = startMatch(
+      route,
+      page.forms.first.field_with(:id => "routeListBox").options.map { |o| o.value }
+    )
+    page.forms.first.set_fields({ "routeListBox" => routeName })
     page = page.forms.first.submit(page.forms.first.buttons[0])
 
     #Send Stop Id
-    selectValue = nil
-    page.forms.first.field_with(:id => "stopListBox").options.each do |f|
-      if (f.value.match(/#{stop}/)) then
-        selectValue = f.value
-        break
-      end
-    end
-    page.forms.first.set_fields({ "stopListBox" => selectValue })
+    stopName = startMatch(
+      stop,
+      page.forms.first.field_with(:id => "stopListBox").options.map { |o| o.value }
+    )
+    page.forms.first.set_fields({ "stopListBox" => stopName})
     page = page.forms.first.submit(page.forms.first.buttons[0])
 
     #Parse and Return Next Bus
-    return Nokogiri::HTML(page.body).css('ul li')[1].text().split("\/").last[26..-1]
+    return Nokogiri::HTML(page.body).css('#repeaterItems_DepartureTime_0').text().split(': ').last
 
   rescue Exception => e
     return false
